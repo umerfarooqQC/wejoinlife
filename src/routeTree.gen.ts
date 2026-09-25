@@ -10,33 +10,73 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalRouteImport } from './routes/_portal'
+import { Route as PortalDashboardRouteImport } from './routes/_portal.dashboard'
+import { Route as PortalProfileRouteImport } from './routes/_portal.profile'
+import { Route as PortalSellerRouteImport } from './routes/_portal.seller'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PortalRoute = PortalRouteImport.update({
+  id: '/_portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalDashboardRoute = PortalDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalProfileRoute = PortalProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalSellerRoute = PortalSellerRouteImport.update({
+  id: '/seller',
+  path: '/seller',
+  getParentRoute: () => PortalRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof PortalDashboardRoute
+  '/profile': typeof PortalProfileRoute
+  '/seller': typeof PortalSellerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof PortalDashboardRoute
+  '/profile': typeof PortalProfileRoute
+  '/seller': typeof PortalSellerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_portal': typeof PortalRouteWithChildren
+  '/_portal/dashboard': typeof PortalDashboardRoute
+  '/_portal/profile': typeof PortalProfileRoute
+  '/_portal/seller': typeof PortalSellerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/dashboard' | '/profile' | '/seller'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/dashboard' | '/profile' | '/seller'
+  id:
+    | '__root__'
+    | '/'
+    | '/_portal'
+    | '/_portal/dashboard'
+    | '/_portal/profile'
+    | '/_portal/seller'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PortalRoute: typeof PortalRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +88,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_portal': {
+      id: '/_portal'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_portal/dashboard': {
+      id: '/_portal/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof PortalDashboardRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/_portal/profile': {
+      id: '/_portal/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof PortalProfileRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/_portal/seller': {
+      id: '/_portal/seller'
+      path: '/seller'
+      fullPath: '/seller'
+      preLoaderRoute: typeof PortalSellerRouteImport
+      parentRoute: typeof PortalRoute
+    }
   }
 }
 
+interface PortalRouteChildren {
+  PortalDashboardRoute: typeof PortalDashboardRoute
+  PortalProfileRoute: typeof PortalProfileRoute
+  PortalSellerRoute: typeof PortalSellerRoute
+}
+
+const PortalRouteChildren: PortalRouteChildren = {
+  PortalDashboardRoute: PortalDashboardRoute,
+  PortalProfileRoute: PortalProfileRoute,
+  PortalSellerRoute: PortalSellerRoute,
+}
+
+const PortalRouteWithChildren =
+  PortalRoute._addFileChildren(PortalRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PortalRoute: PortalRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
