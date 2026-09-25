@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  wejoinlife-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-}
+    container_name: wejoinlife-app-prod
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    expose:
+      - "3000"  # React Frontend (accessible internally to Docker Nginx)
+      - "8080"  # Spring Boot REST API (accessible internally to Docker Nginx)
+    environment:
+      # Database Configuration
+      - DB_HOST=${DB_HOST:-host.docker.internal}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME:-vconnect_prod_portal}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://${DB_HOST:-host.docker.internal}:${DB_PORT:-3306}/${DB_NAME:-vconnect_prod_portal}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+
+      # Security & JWT Configuration
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - JWT_COOKIE_DOMAIN=${JWT_COOKIE_DOMAIN:-}
+      - JWT_COOKIE_NAME=${JWT_COOKIE_NAME:-wjl_jwt}
+      - CLIENT_PASS_SALT=${CLIENT_PASS_SALT:-38fc4120}
+
+      # Multi-Database Mapping
+      - PORTAL_DB=${PORTAL_DB:-vconnect_prod_portal}
+      - CATALOG_DB=${CATALOG_DB:-vconnect_prod_catalog}
+      - VCONNECT_DB=${VCONNECT_DB:-vconnect}
+      - CART_COOKIE_NAME=${CART_COOKIE_NAME:-vconnect_cart}
+
+      - NODE_ENV=production
+    volumes:
+      - ./uploads:/opt/uploads
+    networks:
+      - wjl-network
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: wejoinlife-nginx-prod
+    restart: always
+    depends_on:
+      - wejoinlife-app
+    ports:
+      - "8181:80"   # Host port 8181 -> Docker Nginx (avoids host 80/443 conflict)
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - wjl-network
+
+networks:
+  wjl-network:
+    name: wjl-network
+    driver: bridge
