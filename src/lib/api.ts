@@ -10,7 +10,7 @@ import { getAccessToken } from "./authStore";
  *    to all subsequent API calls without saving tokens to localStorage.
  */
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "",
+  baseURL: import.meta.env["VITE_API_URL"] || "",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
